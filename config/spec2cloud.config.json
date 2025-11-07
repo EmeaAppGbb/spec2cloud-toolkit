@@ -1,0 +1,46 @@
+{
+  "categories": [
+    "All",
+    "AI Apps & Agents",
+    "App Modernization",
+    "Data Centric Apps"
+  ],
+  "industries": [
+    "All",
+    "Financial Services",
+    "Healthcare & Life Sciences",
+    "Manufacturing",
+    "Retail & Consumer Goods",
+    "Government & Public Sector",
+    "Education",
+    "Energy & Resources",
+    "Telco & Media",
+    "Mobility & Automotive"
+  ],
+  "resources": [
+    {
+      "name": "Spec2Cloud Documentation",
+      "description": "Official documentation and guides",
+      "url": "https://github.com/spec2cloud",
+      "icon": "book"
+    },
+    {
+      "name": "GitHub Repository",
+      "description": "View source code and contribute",
+      "url": "https://github.com/spec2cloud",
+      "icon": "github"
+    },
+    {
+      "name": "Getting Started Guide",
+      "description": "Learn how to use Spec Templates",
+      "url": "https://github.com/spec2cloud/docs",
+      "icon": "rocket"
+    },
+    {
+      "name": "Community Forum",
+      "description": "Connect with other developers",
+      "url": "https://github.com/spec2cloud/community",
+      "icon": "comment-discussion"
+    }
+  ]
+}

@@ -1,0 +1,152 @@
+{
+  "name": "spec2cloud-toolkit",
+  "displayName": "Spec2Cloud on Azure",
+  "description": "Spec-Driven Development templates for building and deploying Apps/Agents on Azure",
+  "version": "0.1.0",
+  "publisher": "AlexVieira",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EmeaAppGbb/spec2cloud-toolkit.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "icon": "resources/Spec2Cloud.png",
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Spec2Cloud on Azure",
+      "properties": {
+        "spec2cloud.githubRepo": {
+          "type": "string",
+          "default": "https://github.com/vieiraae/spec2cloud-templates",
+          "description": "GitHub repository URL where Spec Templates are stored (e.g., https://github.com/owner/repo)"
+        },
+        "spec2cloud.templatesBranch": {
+          "type": "string",
+          "default": "main",
+          "description": "Branch name where templates are stored"
+        },
+        "spec2cloud.templatesFolder": {
+          "type": "string",
+          "default": "templates",
+          "description": "Folder name where templates are stored in the repository"
+        }
+      }
+    },
+    "views": {
+      "spec2cloud": [
+        {
+          "id": "spec2cloud.templates",
+          "name": "Templates"
+        },
+        {
+          "id": "spec2cloud.resources",
+          "name": "Resources"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "spec2cloud",
+          "title": "Spec2Cloud on Azure",
+          "icon": "resources/Spec2Cloud.png"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "spec2cloud.viewTemplate",
+        "title": "View Template",
+        "icon": "$(preview)"
+      },
+      {
+        "command": "spec2cloud.viewTemplateOnGitHub",
+        "title": "View on GitHub",
+        "icon": "$(github)"
+      },
+      {
+        "command": "spec2cloud.useTemplate",
+        "title": "Use Template",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "spec2cloud.toggleView",
+        "title": "Open Template Gallery",
+        "icon": "$(preview)"
+      },
+      {
+        "command": "spec2cloud.openResource",
+        "title": "Open Resource"
+      },
+      {
+        "command": "spec2cloud.authenticateGitHub",
+        "title": "Authenticate with GitHub",
+        "icon": "$(github)"
+      },
+      {
+        "command": "spec2cloud.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "spec2cloud.toggleView",
+          "when": "view == spec2cloud.templates",
+          "group": "navigation"
+        },
+        {
+          "command": "spec2cloud.refresh",
+          "when": "view == spec2cloud.templates",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "spec2cloud.viewTemplate",
+          "when": "view == spec2cloud.templates && viewItem == template",
+          "group": "inline@1"
+        },
+        {
+          "command": "spec2cloud.viewTemplateOnGitHub",
+          "when": "view == spec2cloud.templates && viewItem == template",
+          "group": "inline@2"
+        },
+        {
+          "command": "spec2cloud.useTemplate",
+          "when": "view == spec2cloud.templates && viewItem == template",
+          "group": "inline@3"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vscode/vsce": "^3.6.2",
+    "eslint": "^8.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  }
+}
