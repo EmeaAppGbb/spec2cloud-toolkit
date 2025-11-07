@@ -33,8 +33,15 @@ export async function activate(context: vscode.ExtensionContext) {
             // TreeItem has a 'template' property
             const template = (treeItem as any).template;
             if (template) {
-                // Open gallery with template's title, category, and industry pre-filled
-                await galleryProvider.show(template.title, template.category, template.industry);
+                // Open gallery with template's title, category, industry and tech stack pre-filled
+                await galleryProvider.show(
+                    template.title, 
+                    template.category, 
+                    template.industry, 
+                    template.languages || [],
+                    template.services || [],
+                    template.frameworks || []
+                );
             }
         })
     );
@@ -98,7 +105,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     // Clear cache to load fresh data from GitHub
                     templateService.clearCache();
                     progress.report({ message: 'Loading templates...' });
-                    const allTemplates = await templateService.searchTemplates('', 'All', 'All');
+                    const allTemplates = await templateService.searchTemplates('', 'All', 'All', [], [], []);
                     templatesProvider.setTemplates(allTemplates);
                     console.log(`[Spec2Cloud] Loaded ${allTemplates.length} templates`);
                     progress.report({ message: `Loaded ${allTemplates.length} template(s)` });
@@ -141,7 +148,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }, async (progress) => {
             try {
                 progress.report({ message: 'Loading templates...' });
-                const allTemplates = await templateService.searchTemplates('', 'All', 'All');
+                const allTemplates = await templateService.searchTemplates('', 'All', 'All', [], [], []);
                 templatesProvider.setTemplates(allTemplates);
                 console.log(`[Spec2Cloud] Loaded ${allTemplates.length} templates on startup`);
                 progress.report({ message: `Loaded ${allTemplates.length} template(s)` });

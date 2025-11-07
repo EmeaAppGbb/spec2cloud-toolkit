@@ -2,8 +2,8 @@
   "name": "spec2cloud-toolkit",
   "displayName": "Spec2Cloud on Azure",
   "description": "Spec-Driven Development templates for building and deploying Apps/Agents on Azure",
-  "version": "0.1.0",
-  "publisher": "AlexVieira",
+  "version": "0.2.0",
+  "publisher": "AlexVieiraGBB",
   "repository": {
     "type": "git",
     "url": "https://github.com/EmeaAppGbb/spec2cloud-toolkit.git"

@@ -12,6 +12,9 @@ export interface SpecTemplate {
     version: string;
     category: string;
     industry: string;
+    languages: string[];
+    services: string[];
+    frameworks: string[];
     folderPath: string;
     repoUrl: string;
     rawUrl: string;
@@ -168,10 +171,6 @@ export class TemplateService {
                 // Fetch last commit date for the template folder
                 const lastCommitDate = await this.getLastCommitDate(owner, repo, branch, `${templatesFolder}/${templateName}`);
 
-                // Clean category and industry by removing everything after #
-                const cleanCategory = (metadata.category || 'Uncategorized').split('#')[0].trim();
-                const cleanIndustry = (metadata.industry || 'General').split('#')[0].trim();
-
                 const template: SpecTemplate = {
                     id: templateName,
                     name: templateName,
@@ -179,8 +178,11 @@ export class TemplateService {
                     description: metadata.description || description || 'No description available',
                     thumbnail: metadata.thumbnail || 'thumbnail.png',
                     version: metadata.version || '1.0.0',
-                    category: cleanCategory,
-                    industry: cleanIndustry,
+                    category: metadata.category || 'Uncategorized',
+                    industry: metadata.industry || 'General',
+                    languages: this.parseArrayMetadata(metadata.languages || ''),
+                    services: this.parseArrayMetadata(metadata.services || ''),
+                    frameworks: this.parseArrayMetadata(metadata.frameworks || ''),
                     folderPath: `${templatesFolder}/${templateName}`,
                     repoUrl: `https://github.com/${owner}/${repo}`,
                     rawUrl: `https://raw.githubusercontent.com/${owner}/${repo}/${branch}`,
@@ -245,11 +247,25 @@ export class TemplateService {
             const [key, ...valueParts] = line.split(':');
             if (key && valueParts.length > 0) {
                 const value = valueParts.join(':').trim();
-                metadata[key.trim()] = value;
+                // Clean all metadata values by removing everything after and including #
+                metadata[key.trim()] = this.cleanMetadataValue(value);
             }
         }
 
         return metadata;
+    }
+
+    private cleanMetadataValue(value: string): string {
+        // Remove everything after and including the # character
+        // Also remove square brackets that might be in the metadata
+        return value.split('#')[0].trim().replace(/[\[\]]/g, '');
+    }
+
+    private parseArrayMetadata(value: string): string[] {
+        if (!value) {
+            return [];
+        }
+        return value.split(',').map(item => this.cleanMetadataValue(item)).filter(item => item.length > 0);
     }
 
     private parseMarkdown(content: string): { title: string; description: string } {
@@ -270,7 +286,10 @@ export class TemplateService {
     public async searchTemplates(
         searchTerm: string,
         category: string = 'All',
-        industry: string = 'All'
+        industry: string = 'All',
+        languages: string[] = [],
+        services: string[] = [],
+        frameworks: string[] = []
     ): Promise<SpecTemplate[]> {
         const allTemplates = await this.fetchTemplates();
         
@@ -278,7 +297,10 @@ export class TemplateService {
             totalTemplates: allTemplates.length,
             searchTerm,
             category,
-            industry
+            industry,
+            languages,
+            services,
+            frameworks
         });
 
         if (allTemplates.length === 0) {
@@ -300,7 +322,18 @@ export class TemplateService {
             const matchesIndustry = industry === 'All' || 
                 template.industry.toLowerCase() === industry.toLowerCase();
 
-            const matches = matchesSearch && matchesCategory && matchesIndustry;
+            // Check if template matches selected languages (OR logic within each filter type)
+            const matchesLanguages = languages.length === 0 || 
+                languages.some(lang => template.languages.some(tLang => tLang.toLowerCase() === lang.toLowerCase()));
+
+            const matchesServices = services.length === 0 || 
+                services.some(service => template.services.some(tService => tService.toLowerCase() === service.toLowerCase()));
+
+            const matchesFrameworks = frameworks.length === 0 || 
+                frameworks.some(framework => template.frameworks.some(tFramework => tFramework.toLowerCase() === framework.toLowerCase()));
+
+            const matches = matchesSearch && matchesCategory && matchesIndustry && 
+                          matchesLanguages && matchesServices && matchesFrameworks;
 
             if (searchTerm && matches) {
                 console.log(`[Spec2Cloud] Match found: ${template.title}`);
@@ -525,6 +558,33 @@ export class TemplateService {
         
         // Fallback to extension's default thumbnail
         return vscode.Uri.joinPath(context.extensionUri, 'resources', 'default-thumbnail.png');
+    }
+
+    public async getUniqueLanguages(): Promise<string[]> {
+        const allTemplates = await this.fetchTemplates();
+        const languagesSet = new Set<string>();
+        allTemplates.forEach(template => {
+            template.languages.forEach(lang => languagesSet.add(lang));
+        });
+        return Array.from(languagesSet).sort();
+    }
+
+    public async getUniqueServices(): Promise<string[]> {
+        const allTemplates = await this.fetchTemplates();
+        const servicesSet = new Set<string>();
+        allTemplates.forEach(template => {
+            template.services.forEach(service => servicesSet.add(service));
+        });
+        return Array.from(servicesSet).sort();
+    }
+
+    public async getUniqueFrameworks(): Promise<string[]> {
+        const allTemplates = await this.fetchTemplates();
+        const frameworksSet = new Set<string>();
+        allTemplates.forEach(template => {
+            template.frameworks.forEach(framework => frameworksSet.add(framework));
+        });
+        return Array.from(frameworksSet).sort();
     }
 
     public clearCache(): void {
