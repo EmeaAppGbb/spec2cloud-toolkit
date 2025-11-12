@@ -1,145 +1,217 @@
-# Spec2Cloud Toolkit
+# Spec2Cloud Toolkit for VS Code
 
-A Visual Studio Code extension that helps you discover, browse, and use Spec Templates for cloud development.
+![Spec2Cloud Banner](resources/Spec2Cloud-banner.png)
+
+Discover, browse, and use Azure specification templates for your projects with this comprehensive VS Code extension. Powered by the [Azure-Samples/Spec2Cloud](https://github.com/Azure-Samples/Spec2Cloud) repository.
 
 ## Features
 
-### 🔍 Browse Templates
-- Search for Spec Templates from a configured GitHub repository
-- Filter by category and industry
-- View templates in gallery or list mode
+### 🎨 Gallery View
 
-### 📚 Template Management
-- View template details directly in VS Code
-- Open templates on GitHub
-- Copy templates to your workspace with a single click
-- Automatic conflict resolution (won't overwrite existing files)
+Browse templates with a beautiful gallery interface featuring:
+- Full-featured template cards with thumbnails
+- Real-time search across all template properties
+- Multiple filter options (category, industry, services, languages, frameworks)
+- Sorting by name or date
+- Video previews and detailed information modals
 
-### 🔗 Resources
-- Quick access to documentation, guides, and community resources
-- Configurable resource links
+![Gallery Screenshot](resources/Spec2Cloud-gallery.png)
 
-### 🤖 MCP Tool Integration
-- Programmatic access to template search via MCP tools
-- `spec2cloud-select-template` tool for automated workflows
+### 📋 Templates Tree View
+
+Quick access to templates in a hierarchical view:
+- Sort by name (A-Z/Z-A) or date (newest/oldest)
+- View template details on GitHub
+- One-click template usage
+- Refresh to get latest templates
+
+### 📚 Resources View
+
+Configurable quick links to documentation and helpful resources.
+
+### 🤖 MCP Tool Support
+
+Programmatic access for AI assistants via the `spec2cloud-select-template` tool.
 
 ## Getting Started
 
-### 1. Configure GitHub Repository
+1. **Install the Extension**
+   - Install from VS Code Marketplace or VSIX file
 
-Open VS Code settings and configure the following:
+2. **Open Spec2Cloud**
+   - Click the Spec2Cloud icon in the Activity Bar
+   - Browse the gallery or use the tree view
 
-```json
-{
-  "spec2cloud.githubRepo": "https://github.com/your-org/your-repo",
-  "spec2cloud.templatesBranch": "main",
-  "spec2cloud.templatesFolder": "templates"
-}
-```
+3. **Find Templates**
+   - Search by keywords, services, languages, or frameworks
+   - Use filters to narrow down options
+   - Watch demo videos to preview templates
 
-### 2. Browse Templates
-
-1. Open the Spec2Cloud view in the Activity Bar
-2. Use the Browse panel to search for templates
-3. Apply filters for category and industry
-4. Click the search button to find templates
-
-### 3. Use a Template
-
-1. View search results in the Templates panel
-2. Click the "Use Template" button on any template
-3. The template will be copied to your workspace
+4. **Use a Template**
+   - Click "Use Template" on any template
+   - Confirm to download all files to your workspace
+   - Existing files are never overwritten
 
 ## Configuration
 
-### Extension Settings
+### Templates Repository
 
-- `spec2cloud.githubRepo`: GitHub repository URL where Spec Templates are stored
-- `spec2cloud.templatesBranch`: Branch name (default: "main")
-- `spec2cloud.templatesFolder`: Folder name where templates are stored (default: "templates")
-
-### Configuration File
-
-Customize categories, industries, and resources by editing `config/spec2cloud.config.json`:
+Configure the GitHub repository containing templates:
 
 ```json
 {
-  "categories": ["All", "AI Apps & Agents", "App Modernization", "Data Centric Apps"],
-  "industries": ["All", "Financial Services", "Healthcare & Life Sciences", ...],
-  "resources": [
+  "spec2cloud.templatesRepo": "https://github.com/Azure-Samples/Spec2Cloud"
+}
+```
+
+### Custom Resources
+
+Add your own resource links:
+
+```json
+{
+  "spec2cloud.resources": [
     {
-      "name": "Resource Name",
-      "description": "Resource description",
-      "url": "https://example.com",
-      "icon": "book"
+      "name": "Azure Documentation",
+      "description": "Official Azure docs",
+      "url": "https://learn.microsoft.com/azure",
+      "icon": "Azure"
     }
   ]
 }
 ```
 
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `spec2cloud.openGallery` | Open the template gallery |
+| `spec2cloud.refreshTemplates` | Refresh templates from repository |
+| `spec2cloud.sortTemplatesByName` | Toggle name sorting (A-Z/Z-A) |
+| `spec2cloud.sortTemplatesByDate` | Toggle date sorting (newest/oldest) |
+| `spec2cloud.viewTemplateOnGitHub` | Open template on GitHub |
+| `spec2cloud.viewTemplateInGallery` | View template in gallery |
+| `spec2cloud.useTemplate` | Download template to workspace |
+
 ## Template Structure
 
-Each Spec Template should have a `README.md` file with the following frontmatter:
+Templates in the repository should follow this structure:
 
-```markdown
----
-title: Template Title
-description: Template description
-thumbnail: thumbnail.png
-version: 1.0.0
-category: AI Apps & Agents
-industry: Financial Services
----
-
-# Template Title
-
-Detailed description...
+```
+template-name/
+├── README.md
+├── thumbnail.png (16:9 aspect ratio)
+├── demo.mp4 (optional)
+└── ... (template files)
 ```
 
-## MCP Tool
+The repository must include a `templates.json` file:
 
-The extension provides an MCP tool for programmatic access:
-
-```typescript
-// Tool: spec2cloud-select-template
+```json
 {
-  "searchTerm": "ai agent",
-  "category": "AI Apps & Agents",
-  "industry": "All"
+  "templates": [
+    {
+      "name": "template-folder-name",
+      "title": "Template Display Name",
+      "description": "Template description",
+      "category": "AI Apps",
+      "industry": "Healthcare",
+      "thumbnail": "thumbnail.png",
+      "video": "demo.mp4",
+      "services": ["Azure OpenAI", "Azure Cosmos DB"],
+      "languages": ["Python", "TypeScript"],
+      "frameworks": ["LangChain"],
+      "tags": ["chat", "rag"],
+      "authors": [
+        {
+          "name": "Author Name",
+          "githubHandle": "githubusername"
+        }
+      ],
+      "version": "1.0.0",
+      "lastCommitDate": "2025-11-12"
+    }
+  ]
 }
 ```
 
+## Icons
+
+The extension includes SVG icons for:
+- **60+ Azure Services** (blue badges)
+- **5 Programming Languages** (orange badges)
+- **4 Frameworks** (purple badges)
+
+Icons are located in:
+- `resources/services/`
+- `resources/languages/`
+- `resources/frameworks/`
+
 ## Requirements
 
-- Visual Studio Code 1.85.0 or higher
-- Active internet connection for fetching templates from GitHub
+- VS Code 1.85.0 or later
+- Internet connection to fetch templates
+
+## Extension Settings
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `spec2cloud.templatesRepo` | `https://github.com/Azure-Samples/Spec2Cloud` | GitHub repository URL |
+| `spec2cloud.resources` | `[...]` | Custom resource links |
 
 ## Known Issues
 
-- Thumbnail images from GitHub repositories may require authentication for private repos
+- Template downloads require internet connection
 - Large templates may take time to download
+- Private repositories require authentication (not yet supported)
+
+See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for solutions to common issues.
+
+## Documentation
+
+- [User Guide](USER_GUIDE.md) - Comprehensive usage documentation
+- [Troubleshooting](TROUBLESHOOTING.md) - Solutions to common problems
+- [Templates JSON Format](TEMPLATES_JSON_FORMAT.md) - Template repository format
+- [MCP Tools](MCP_TOOLS.md) - MCP tool integration details
+- [Testing Guide](TESTING.md) - Extension testing instructions
+- [Contributing](CONTRIBUTING.md) - Contribution guidelines
 
 ## Release Notes
 
-### 1.0.0
+### 0.3.0
 
-Initial release of Spec2Cloud Toolkit
+**Added:**
+- Gallery view with banner image and open button
+- Templates tree view with sorting and actions
+- Full-featured template gallery page with search and filters
+- Resources tree view for documentation links
+- MCP tool: `spec2cloud-select-template`
+- Support for 60+ Azure service icons
+- Template download functionality with overwrite protection
+- Video preview support
+- Author links to GitHub profiles
+- Real-time filtering and search
 
-- Browse and search Spec Templates
-- Filter by category and industry
-- Gallery and list view modes
-- Copy templates to workspace
-- Resources panel
-- MCP tool integration
-
-## Contributing
-
-Contributions are welcome! Please visit our [GitHub repository](https://github.com/spec2cloud/toolkit) to report issues or submit pull requests.
+**Features:**
+- 🎨 Modern UI with theme support (light/dark)
+- 🔍 Powerful search across all template properties
+- 🏷️ Multiple filter dimensions (category, industry, technology)
+- 📊 Flexible sorting (name, date)
+- 🎬 Video previews for templates
+- 📱 Responsive gallery layout
+- 🔒 Safe template downloads (no overwrites)
+- 🤖 AI assistant integration via MCP
 
 ## License
 
-MIT License - See LICENSE file for details
+[MIT](LICENSE)
+
+## Acknowledgments
+
+- Template repository: [Azure-Samples/Spec2Cloud](https://github.com/Azure-Samples/Spec2Cloud)
+- Azure icons and branding: Microsoft Corporation
+- Built with ❤️ for the Azure community
 
 ---
 
-**Enjoy using Spec2Cloud Toolkit!** 🚀
+**Enjoy building with Spec2Cloud templates!** 🚀

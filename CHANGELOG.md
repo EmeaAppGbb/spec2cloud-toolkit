@@ -2,99 +2,111 @@
 
 All notable changes to the "spec2cloud-toolkit" extension will be documented in this file.
 
-## [0.2.0] - 2025-11-07
+## [0.3.0] - 2025-11-12
 
 ### Added
 
-- Collapsible right sidebar for advanced filters (languages, services, frameworks)
-- SVG icon support with automatic loading from resources folder
-- Checkbox-based filter interface replacing dropdown multi-selects
-- Enhanced UI layout with main content area and sidebar panel
-- Improved visual styling with VS Code theme integration
+#### Configuration
+- **Templates Repository Setting**: Configure custom GitHub repository for templates (default: `https://github.com/Azure-Samples/Spec2Cloud`)
+- **Resources Configuration**: Customizable resource links in settings
+- **Automatic Template Loading**: Templates load on extension startup with progress notification
+- **Configuration Change Detection**: Prompts to reload when templates repository changes
 
-### Changed
+#### Views
+- **Gallery View**: WebView with banner image and "Open Template Gallery" button
+- **Templates Tree View**: Hierarchical list of templates with sorting and actions
+- **Template Gallery Page**: Full-featured gallery with search, filters, and rich template cards
+- **Resources View**: Minimal tree view for documentation and resource links
 
-- **Template Gallery Layout**: Restructured to use flex layout with collapsible sidebar
-- **Filter Interface**: Replaced complex dropdown multi-selects with simple checkbox lists
-- **Icon System**: Implemented SVG icons with emoji fallbacks for better visual identification
-- **Search Bar**: Reorganized into two rows for better space utilization
-- **Filter Organization**: Moved advanced filters (languages, services, frameworks) to dedicated sidebar
+#### Template Gallery Features
+- **Real-time Search**: Search across title, description, tags, services, languages, and frameworks
+- **Smart Filtering**: Filter by category, industry, services, languages, and frameworks
+- **Flexible Sorting**: Sort by title (A-Z/Z-A) or date (newest/oldest first)
+- **Rich Template Cards**: Display thumbnails, badges, authors, version, and last update date
+- **Video Preview**: Modal playback for template demo videos
+- **Details Modal**: Full template information without truncation
+- **Icon Support**: 60+ Azure service icons, 5 language icons, 4 framework icons
+- **Badge System**: Color-coded badges for categories, industries, services, languages, frameworks, and tags
+- **Author Links**: Direct links to GitHub profiles
+- **Star Repositories**: Quick access to star templates on GitHub
 
-### Improved
+#### Template Actions
+- **View on GitHub**: Opens template repository in external browser
+- **View Template**: Opens gallery with template pre-selected in search
+- **Use Template**: Downloads all template files to workspace with confirmation dialog
+- **Safe Downloads**: Never overwrites existing files
+- **Progress Indicators**: Shows download progress
 
-- **User Experience**: Cleaner, more intuitive interface with progressive disclosure
-- **Visual Design**: Added hover effects, transitions, and proper spacing
-- **Accessibility**: Larger click targets and better keyboard navigation
-- **Performance**: Eliminated complex dropdown state management
-- **Mobile Responsiveness**: Better touch targets and responsive design
+#### Sorting & Organization
+- **Sort by Name**: Toggle between A-Z and Z-A sorting
+- **Sort by Date**: Toggle between newest first and oldest first
+- **Refresh Templates**: Reload templates from repository
+- **Default Sort**: Templates sorted by newest first
 
-### Fixed
+#### MCP Tools Integration
+- **spec2cloud-select-template Tool**: Programmatic template search and selection
+- **Search Parameters**: Support for searchTerm, category, and industry filters
+- **Gallery Integration**: Opens gallery with search term pre-filled
+- **JSON Response**: Returns filtered template list
 
-- JavaScript syntax errors in template literal generation
-- Quote conflicts in embedded HTML/JavaScript code
-- SVG icon rendering in filter checkboxes
-- Square bracket removal from metadata parsing
-- Template literal escaping issues
+#### UI/UX Enhancements
+- **Theme Support**: Full light and dark mode support using VS Code theme colors
+- **Responsive Design**: Gallery adapts to different panel sizes
+- **Modern UI**: Clean, modern interface with smooth interactions
+- **Collapsible Filters**: Space-efficient filter panel
+- **Interactive Elements**: No submit buttons needed, real-time updates
+- **Truncation with Details**: Smart text truncation with modal for full details
 
-### Technical
+#### Developer Experience
+- **Type Safety**: Full TypeScript type definitions
+- **Service Architecture**: Modular service-based architecture
+- **Error Handling**: User-friendly error messages
+- **Configuration Validation**: Validates GitHub repository URLs
+- **External Links**: Opens all external links in system browser
 
-- Enhanced webview HTML generation with proper quote handling
-- Improved SVG resource loading with multiple lookup strategies
-- Streamlined JavaScript functions for filter management
-- Updated CSS architecture for modern layout techniques
-- Optimized icon rendering pipeline
+### Technical Details
 
-## [0.1.0] - 2025-11-06
+#### New Files
+- `src/extension.ts` - Main extension activation and command registration
+- `src/types.ts` - TypeScript interfaces and type definitions
+- `src/templateService.ts` - Template fetching and downloading from GitHub
+- `src/galleryViewProvider.ts` - Simple gallery view implementation
+- `src/templatesTreeProvider.ts` - Templates tree view provider
+- `src/templateGalleryPanel.ts` - Full gallery page with rich UI
+- `src/resourcesTreeProvider.ts` - Resources tree view provider
+- `src/mcpToolsProvider.ts` - MCP tool implementation
 
-### Features
+#### Commands
+- `spec2cloud.openGallery` - Open template gallery page
+- `spec2cloud.refreshTemplates` - Refresh templates from repository
+- `spec2cloud.sortTemplatesByName` - Toggle name sorting
+- `spec2cloud.sortTemplatesByDate` - Toggle date sorting
+- `spec2cloud.viewTemplateOnGitHub` - Open template on GitHub
+- `spec2cloud.viewTemplateInGallery` - View template in gallery
+- `spec2cloud.useTemplate` - Download template to workspace
+- `spec2cloud.openResource` - Open resource URL
+- `spec2cloud.mcp.selectTemplate` - MCP tool command
 
-- Initial release of Spec2Cloud Toolkit
-- Browse view with search functionality
-- Category and industry filters
-- Templates view with gallery and list modes
-- Template actions: View, View on GitHub, Use
-- Resources view for quick access to documentation
-- MCP tool integration with `spec2cloud-select-template`
-- Configuration support for custom categories, industries, and resources
-- GitHub repository integration for fetching Spec Templates
-- Automatic README.md parsing with frontmatter support
-- Template copying to workspace with conflict prevention
-- Simple browser integration for viewing templates
-- External browser support for GitHub links
+#### Dependencies
+- `axios` - HTTP client for fetching templates and files
 
-### Key Features
+### Documentation
+- Added `USER_GUIDE.md` - Comprehensive user documentation
+- Added `MCP_TOOLS.md` - MCP tool integration guide
+- Added `IMPLEMENTATION_SUMMARY.md` - Technical implementation details
+- Updated `README.md` - Main extension documentation
+- Updated `TESTING.md` - Testing instructions
 
-- **Browse Panel**: Search templates with advanced filtering
-- **Templates Panel**: View search results in gallery or list mode
-- **Resources Panel**: Quick access to documentation and resources
-- **Smart Template Parsing**: Automatic extraction of metadata from README.md
-- **Workspace Integration**: Copy templates without overwriting existing files
-- **MCP Support**: Programmatic template selection via MCP tools
+### Resources
+- Added 60+ Azure service SVG icons in `resources/services/`
+- Added 5 language SVG icons in `resources/languages/`
+- Added 4 framework SVG icons in `resources/frameworks/`
+- Added `Spec2Cloud-gallery.png` - Gallery banner image
 
-### Configuration
+## [0.2.0] - Previous Version
 
-- `spec2cloud.githubRepo`: Configure GitHub repository URL
-- `spec2cloud.templatesBranch`: Set the branch to fetch templates from
-- `spec2cloud.templatesFolder`: Configure the templates folder name
+(Previous changelog entries would go here)
 
-### Known Issues
+## [0.1.0] - Initial Release
 
-- Thumbnail images from private GitHub repos may require authentication
-- Large templates may take time to download
-
----
-
-## Future Enhancements
-
-Planned features for future releases:
-
-- Template preview with syntax highlighting
-- Template versioning and update notifications
-- Template favorites and history
-- Advanced search with regex support
-- Template comparison tool
-- Offline template caching
-- Custom template validation
-- Template contribution workflow
-- Integration with GitHub Actions
-- Template analytics and usage tracking
+(Initial release notes would go here)
