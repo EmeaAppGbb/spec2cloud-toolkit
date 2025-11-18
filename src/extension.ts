@@ -4,8 +4,10 @@ import { GalleryViewProvider } from './galleryViewProvider';
 import { TemplatesTreeProvider } from './templatesTreeProvider';
 import { ResourcesTreeProvider } from './resourcesTreeProvider';
 import { TemplateGalleryPanel } from './templateGalleryPanel';
-import { McpToolsProvider } from './mcpToolsProvider';
+import { ChatToolsProvider } from './chatToolsProvider';
 import { SortOrder } from './types';
+import { SearchTemplatesTool } from './tools/searchTemplates';
+import { CostEstimatorTool } from './tools/costEstimator';
 
 let templateService: TemplateService;
 let templatesTreeProvider: TemplatesTreeProvider;
@@ -14,6 +16,7 @@ let outputChannel: vscode.OutputChannel;
 
 export async function activate(context: vscode.ExtensionContext) {
     console.log('Spec2Cloud Toolkit is now active');
+    const didChangeEmitter = new vscode.EventEmitter<void>();
 
     // Create output channel for logging
     outputChannel = vscode.window.createOutputChannel('Spec2Cloud');
@@ -65,9 +68,59 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.window.registerTreeDataProvider('spec2cloud.resources', resourcesTreeProvider)
     );
 
-    // Register MCP Tools
-    const mcpToolsProvider = new McpToolsProvider(templateService, context.extensionUri);
-    mcpToolsProvider.registerTools(context);
+    // Register Chat Tools
+    const chatToolsProvider = new ChatToolsProvider(templateService, context.extensionUri);
+    chatToolsProvider.registerTools(context);
+
+    context.subscriptions.push(
+        vscode.lm.registerTool('searchTemplates', new SearchTemplatesTool(templateService, context.extensionUri))
+    );    
+    context.subscriptions.push(
+        vscode.lm.registerTool('costEstimator', new CostEstimatorTool(templateService, context.extensionUri))
+    );    
+
+    // Register URI Handler
+    context.subscriptions.push(
+        vscode.window.registerUriHandler({
+            handleUri(uri: vscode.Uri): vscode.ProviderResult<void> {
+                outputChannel.appendLine(`Handling URI: ${uri.toString()}`);
+                
+                // Parse query parameters
+                const query = new URLSearchParams(uri.query);
+                const templateName = query.get('template');
+                const action = query.get('action') || 'view';
+                
+                if (templateName) {
+                    outputChannel.appendLine(`Template requested: ${templateName}`);
+                    
+                    // Find the template
+                    const template = templateService.getTemplates().find(
+                        t => t.name === templateName || t.title === templateName
+                    );
+                    
+                    if (template) {
+                        if (action === 'use') {
+                            // Use the template
+                            vscode.commands.executeCommand('spec2cloud.cloneTemplate', { template });
+                        } else if (action === 'github') {
+                            // Open on GitHub
+                            vscode.env.openExternal(vscode.Uri.parse(template.repoUrl));
+                        } else {
+                            // Default: View in gallery
+                            TemplateGalleryPanel.createOrShow(context.extensionUri, templateService, template.title);
+                        }
+                    } else {
+                        vscode.window.showWarningMessage(`Template "${templateName}" not found`);
+                        // Open gallery anyway
+                        TemplateGalleryPanel.createOrShow(context.extensionUri, templateService);
+                    }
+                } else {
+                    // No template specified, just open the gallery
+                    TemplateGalleryPanel.createOrShow(context.extensionUri, templateService);
+                }
+            }
+        })
+    );
 
     // Register Commands
 
@@ -90,6 +143,21 @@ export async function activate(context: vscode.ExtensionContext) {
                 templatesTreeProvider.refresh();
             });
             vscode.window.showInformationMessage('Templates refreshed successfully!');
+        })
+    );
+
+    // Search Templates Command
+    context.subscriptions.push(
+        vscode.commands.registerCommand('spec2cloud.searchTemplates', async () => {
+            const searchTerm = await vscode.window.showInputBox({
+                prompt: 'Search templates by name, description, category, services, languages, or frameworks',
+                placeHolder: 'e.g., "cosmos db", "python", "ai"'
+            });
+
+            if (searchTerm !== undefined) {
+                // Open gallery with search term
+                TemplateGalleryPanel.createOrShow(context.extensionUri, templateService, searchTerm);
+            }
         })
     );
 
@@ -131,14 +199,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Use Template Command
     context.subscriptions.push(
-        vscode.commands.registerCommand('spec2cloud.useTemplate', async (treeItem) => {
+        vscode.commands.registerCommand('spec2cloud.cloneTemplate', async (treeItem) => {
             if (!treeItem || !treeItem.template) {
                 return;
             }
 
             const template = treeItem.template;
             const answer = await vscode.window.showInformationMessage(
-                `This will download all the template files to the current workspace. Continue?`,
+                `This action will clone the template into the current workspace. Continue?`,
                 { modal: true },
                 'Yes'
             );

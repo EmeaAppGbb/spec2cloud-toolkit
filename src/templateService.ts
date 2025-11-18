@@ -11,7 +11,6 @@ export class TemplateService {
         this.outputChannel = outputChannel;
         this.templatesRepoUrl = vscode.workspace.getConfiguration('spec2cloud').get('templatesRepo', 'https://github.com/Azure-Samples/Spec2Cloud');
         this.log('TemplateService initialized');
-        this.log(`Templates repository: ${this.templatesRepoUrl}`);
     }
 
     private log(message: string): void {
@@ -28,22 +27,10 @@ export class TemplateService {
             
             const response = await axios.get(rawUrl);
             this.log(`Received response with status: ${response.status}`);
-            this.log(`Response data type: ${Array.isArray(response.data) ? 'array' : typeof response.data}`);
             
-            // Handle multiple JSON formats
             let templatesData: Omit<Template, 'repoUrl'>[];
             
-            if (Array.isArray(response.data)) {
-                // Format 1: Direct array of templates
-                templatesData = response.data;
-                this.log('Templates data is a direct array');
-            } else if (response.data && Array.isArray(response.data.templates)) {
-                // Format 2: Object with templates property containing an array
-                templatesData = response.data.templates;
-                this.log('Templates data is an object with templates property');
-            } else if (response.data && typeof response.data === 'object' && !Array.isArray(response.data)) {
-                // Format 3: Object where each key is a template name (like the spec2cloud-templates repo)
-                this.log('Templates data is an object with template names as keys');
+            if (response.data && typeof response.data === 'object' && !Array.isArray(response.data)) {
                 templatesData = Object.entries(response.data).map(([name, template]: [string, any]) => {
                     // Determine default thumbnail based on category
                     let defaultThumbnail = 'thumbnail.png';
@@ -89,10 +76,11 @@ export class TemplateService {
                         version: template.version,
                         lastCommitDate: template['last-commit-date'] || template.lastCommitDate || new Date().toISOString(),
                         // Store the repo URL from template for later use
-                        repo: template.repo
+                        repo: template.repo,
+                        // Extract stars from metadata if available
+                        stars: template.metadata?.stars || template.stars
                     };
                 });
-                this.log(`Sample template authors: ${JSON.stringify(templatesData[0]?.authors || 'none')}`);
             } else {
                 throw new Error('Invalid templates.json format. Expected array, object with "templates" property, or object with template names as keys.');
             }
@@ -101,7 +89,9 @@ export class TemplateService {
             this.templates = templatesData.map(template => ({
                 ...template,
                 // Use the repo property from template if available, otherwise generate from templates repo
-                repoUrl: (template as any).repo || `${this.templatesRepoUrl}/tree/main/templates/${template.name}`
+                repoUrl: (template as any).repo || `${this.templatesRepoUrl}/tree/main/templates/${template.name}`,
+                // Track whether this template has its own repo or is part of a collection
+                hasOwnRepo: !!(template as any).repo
             }));
 
             this.log(`Successfully loaded ${this.templates.length} templates`);
@@ -142,61 +132,179 @@ export class TemplateService {
 
     async downloadTemplate(template: Template, targetDir: vscode.Uri): Promise<void> {
         try {
-            const files = await this.getTemplateFiles(template.name);
-            
-            for (const file of files) {
-                const targetPath = vscode.Uri.joinPath(targetDir, file.path);
-                
-                // Check if file exists
-                try {
-                    await vscode.workspace.fs.stat(targetPath);
-                    continue; // Skip if file exists
-                } catch {
-                    // File doesn't exist, proceed with download
-                }
+            this.log(`Starting git clone for template: ${template.name}`);
+            this.log(`Repository URL: ${template.repoUrl}`);
+            this.log(`Target directory: ${targetDir.fsPath}`);
 
-                // Create directory if needed
-                const dirPath = vscode.Uri.joinPath(targetDir, file.path.substring(0, file.path.lastIndexOf('/')));
-                await vscode.workspace.fs.createDirectory(dirPath);
-
-                // Download and write file
-                const content = await axios.get(file.downloadUrl, { responseType: 'arraybuffer' });
-                await vscode.workspace.fs.writeFile(targetPath, new Uint8Array(content.data));
+            // Extract repository info
+            const repoInfo = this.extractRepoInfo(template);
+            if (!repoInfo) {
+                throw new Error('Invalid GitHub repository URL');
             }
 
-            vscode.window.showInformationMessage(`Template "${template.title}" downloaded successfully!`);
-        } catch (error) {
-            vscode.window.showErrorMessage(`Failed to download template: ${error}`);
+            const { owner, repo, branch, basePath } = repoInfo;
+            
+            // Build the git clone URL
+            const cloneUrl = `https://github.com/${owner}/${repo}.git`;
+            
+            // Clone directly into the root directory
+            const cloneTargetPath = targetDir;
+
+            // Check if directory is not empty
+            try {
+                const entries = await vscode.workspace.fs.readDirectory(cloneTargetPath);
+                if (entries.length > 0) {
+                    const overwrite = await vscode.window.showWarningMessage(
+                        `Target directory is not empty. Clone template files into this directory anyway?`,
+                        { modal: true },
+                        'Yes',
+                        'No'
+                    );
+                    if (overwrite !== 'Yes') {
+                        return;
+                    }
+                }
+            } catch {
+                // Directory doesn't exist or can't read, which is fine
+            }
+
+            // Execute git clone
+            const terminal = vscode.window.createTerminal({
+                name: `Clone ${template.name}`,
+                cwd: targetDir.fsPath,
+                hideFromUser: false
+            });
+
+            terminal.show();
+
+            // Build git clone command
+            let cloneCommand: string;
+            if (template.hasOwnRepo && !basePath) {
+                // Clone the entire repository into current directory
+                this.log(`Cloning entire repository into root`);
+                cloneCommand = `git clone --branch ${branch} ${cloneUrl} .`;
+            } else {
+                // Clone with sparse checkout for specific folder into current directory
+                const sparsePath = basePath || `templates/${template.name}`;
+                this.log(`Cloning with sparse checkout into root: ${sparsePath}`);
+                
+                cloneCommand = `git clone --filter=blob:none --no-checkout --branch ${branch} ${cloneUrl} . && git sparse-checkout init --cone && git sparse-checkout set "${sparsePath}" && git checkout ${branch}`;
+            }
+
+            terminal.sendText(cloneCommand);
+
+            vscode.window.showInformationMessage(`Cloning template "${template.title}"... Check terminal for progress.`);
+        } catch (error: any) {
+            this.log(`ERROR: Failed to clone template: ${error.message}`);
+            vscode.window.showErrorMessage(`Failed to clone template: ${error.message}`);
             throw error;
         }
     }
 
-    private async getTemplateFiles(templateName: string): Promise<{ path: string; downloadUrl: string }[]> {
-        // Use GitHub API to get tree
-        const match = this.templatesRepoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
-        if (!match) {
-            throw new Error('Invalid GitHub repository URL');
+    private async getTemplateFiles(template: Template): Promise<{ path: string; downloadUrl: string }[]> {
+        const repoInfo = this.extractRepoInfo(template);
+        if (!repoInfo) {
+            throw new Error('Invalid GitHub repository URL in template');
         }
 
-        const [, owner, repo] = match;
-        const apiUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/main?recursive=1`;
+        const { owner, repo, branch, basePath } = repoInfo;
+        
+        // If template has its own repo, use basePath or root; otherwise use templates/{name}
+        let templatePath: string;
+        if (template.hasOwnRepo) {
+            // Template has its own repository - download from basePath or root
+            templatePath = basePath || '';
+        } else {
+            // Template is part of a collection - use templates/{name} path
+            templatePath = basePath || `templates/${template.name}`;
+        }
+        
+        this.log(`Fetching template files for ${template.name}`);
+        this.log(`Repository: ${owner}/${repo}, Branch: ${branch}`);
+        this.log(`Has own repo: ${template.hasOwnRepo}`);
+        this.log(`Template path: "${templatePath}"`);
+        
+        const apiUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
         
         try {
             const response = await axios.get(apiUrl);
             const tree = response.data.tree;
 
+            this.log(`Received ${tree.length} items from repository tree`);
+
             // Filter files that belong to the template
             const templateFiles = tree
-                .filter((item: any) => item.type === 'blob' && item.path.startsWith(`templates/${templateName}/`))
-                .map((item: any) => ({
-                    path: item.path.substring(`templates/${templateName}/`.length), // Remove templates/template-name prefix
-                    downloadUrl: `https://raw.githubusercontent.com/${owner}/${repo}/main/${item.path}`
-                }));
+                .filter((item: any) => {
+                    const isBlob = item.type === 'blob';
+                    
+                    // If templatePath is empty, get all files from root
+                    let matchesPath: boolean;
+                    if (templatePath === '') {
+                        matchesPath = true; // All files
+                    } else {
+                        matchesPath = item.path.startsWith(`${templatePath}/`) || item.path === templatePath;
+                    }
+                    
+                    if (isBlob && matchesPath) {
+                        this.log(`Found file: ${item.path}`);
+                    }
+                    return isBlob && matchesPath;
+                })
+                .map((item: any) => {
+                    // Calculate relative path
+                    let relativePath = item.path;
+                    
+                    if (templatePath !== '') {
+                        if (item.path.startsWith(`${templatePath}/`)) {
+                            relativePath = item.path.substring(`${templatePath}/`.length);
+                        } else if (item.path === templatePath) {
+                            // Single file case - extract just the filename
+                            relativePath = templatePath.split('/').pop() || templatePath;
+                        }
+                    }
+                    
+                    return {
+                        path: relativePath,
+                        downloadUrl: `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${item.path}`
+                    };
+                });
+
+            this.log(`Found ${templateFiles.length} files for template ${template.name}`);
+            if (templateFiles.length === 0) {
+                this.log(`WARNING: No files found. Check if path "${templatePath}" exists in ${owner}/${repo} on branch ${branch}`);
+            }
 
             return templateFiles;
-        } catch (error) {
+        } catch (error: any) {
+            this.log(`ERROR fetching template files: ${error.message}`);
+            if (error.response) {
+                this.log(`HTTP Status: ${error.response.status}`);
+            }
             throw new Error(`Failed to fetch template files: ${error}`);
         }
+    }
+
+    private extractRepoInfo(template: Template): { owner: string; repo: string; branch: string; basePath: string } | null {
+        const match = template.repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+        if (!match) {
+            return null;
+        }
+
+        const [, owner, repo] = match;
+        
+        // Extract branch and base path from URL
+        const urlParts = template.repoUrl.split('/');
+        const treeIndex = urlParts.indexOf('tree');
+        let branch = 'main';
+        let basePath = '';
+        
+        if (treeIndex > -1 && urlParts.length > treeIndex + 1) {
+            branch = urlParts[treeIndex + 1];
+            // Get everything after branch as the base path
+            basePath = urlParts.slice(treeIndex + 2).join('/');
+        }
+        
+        return { owner, repo, branch, basePath };
     }
 
     getThumbnailUrl(template: Template): string {
@@ -206,10 +314,30 @@ export class TemplateService {
             return template.thumbnail; // Will be resolved by the webview
         }
         
-        const match = this.templatesRepoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
-        if (match) {
-            const [, owner, repo] = match;
-            const url = `https://raw.githubusercontent.com/${owner}/${repo}/main/templates/${template.name}/${template.thumbnail}`;
+        // If thumbnail is already a URL, use it directly
+        if (template.thumbnail.startsWith('http://') || template.thumbnail.startsWith('https://')) {
+            this.log(`Using direct URL for thumbnail ${template.name}: ${template.thumbnail}`);
+            return template.thumbnail;
+        }
+        
+        // Otherwise, build the raw GitHub URL from the template's repo
+        const repoInfo = this.extractRepoInfo(template);
+        if (repoInfo) {
+            const { owner, repo, branch, basePath } = repoInfo;
+            
+            // Build the URL based on whether template has its own repo
+            let path: string;
+            if (template.hasOwnRepo) {
+                // Template has its own repo - thumbnail is at basePath or root
+                path = basePath || '';
+            } else {
+                // Template is part of a collection
+                path = basePath || `templates/${template.name}`;
+            }
+            
+            const url = path 
+                ? `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}/${template.thumbnail}`
+                : `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${template.thumbnail}`;
             this.log(`Thumbnail URL for ${template.name}: ${url}`);
             return url;
         }
@@ -222,10 +350,31 @@ export class TemplateService {
             this.log(`No video for ${template.name}`);
             return undefined;
         }
-        const match = this.templatesRepoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
-        if (match) {
-            const [, owner, repo] = match;
-            const url = `https://raw.githubusercontent.com/${owner}/${repo}/main/templates/${template.name}/${template.video}`;
+        
+        // If video is already a URL, use it directly (supports YouTube, raw GitHub, etc.)
+        if (template.video.startsWith('http://') || template.video.startsWith('https://')) {
+            this.log(`Using direct URL for video ${template.name}: ${template.video}`);
+            return template.video;
+        }
+        
+        // Otherwise, build the raw GitHub URL from the template's repo
+        const repoInfo = this.extractRepoInfo(template);
+        if (repoInfo) {
+            const { owner, repo, branch, basePath } = repoInfo;
+            
+            // Build the URL based on whether template has its own repo
+            let path: string;
+            if (template.hasOwnRepo) {
+                // Template has its own repo - video is at basePath or root
+                path = basePath || '';
+            } else {
+                // Template is part of a collection
+                path = basePath || `templates/${template.name}`;
+            }
+            
+            const url = path
+                ? `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}/${template.video}`
+                : `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${template.video}`;
             this.log(`Video URL for ${template.name}: ${url}`);
             return url;
         }

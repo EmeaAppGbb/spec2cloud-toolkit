@@ -34,6 +34,9 @@ export class TemplateGalleryPanel {
                     case 'starRepo':
                         vscode.env.openExternal(vscode.Uri.parse(message.repoUrl));
                         break;
+                    case 'showError':
+                        vscode.window.showErrorMessage(message.message);
+                        break;
                 }
             },
             null,
@@ -84,10 +87,9 @@ export class TemplateGalleryPanel {
         }
 
         const answer = await vscode.window.showInformationMessage(
-            `This will download all the template files to the current workspace. Continue?`,
+            `This action will clone the template into the current workspace. Continue?`,
             { modal: true },
-            'Yes',
-            'No'
+            'Yes'
         );
 
         if (answer === 'Yes') {
@@ -99,7 +101,7 @@ export class TemplateGalleryPanel {
 
             await vscode.window.withProgress({
                 location: vscode.ProgressLocation.Notification,
-                title: `Downloading template: ${template.title}`,
+                title: `Cloning template: ${template.title}`,
                 cancellable: false
             }, async () => {
                 await this.templateService.downloadTemplate(template, workspaceFolders[0].uri);
@@ -183,6 +185,7 @@ export class TemplateGalleryPanel {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} https: data:; media-src https:; script-src 'unsafe-inline' ${webview.cspSource}; style-src 'unsafe-inline' ${webview.cspSource};">
     <title>Spec Templates Gallery</title>
     <style>
         * {
@@ -213,6 +216,7 @@ export class TemplateGalleryPanel {
             gap: 20px;
             margin-bottom: 20px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         .search-box {
@@ -237,6 +241,12 @@ export class TemplateGalleryPanel {
             box-shadow: 0 0 0 1px var(--vscode-focusBorder);
         }
 
+        .sort-control {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
         .sort-control select {
             padding: 8px 12px;
             background-color: var(--vscode-dropdown-background);
@@ -245,6 +255,29 @@ export class TemplateGalleryPanel {
             border-radius: 4px;
             font-family: var(--vscode-font-family);
             font-size: 14px;
+        }
+
+        .filters-toggle-btn {
+            padding: 8px 12px;
+            background-color: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+            border: 1px solid var(--vscode-button-border);
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: var(--vscode-font-family);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background-color 0.2s;
+        }
+
+        .filters-toggle-btn:hover {
+            background-color: var(--vscode-button-secondaryHoverBackground);
+        }
+
+        .filters-toggle-btn:active {
+            background-color: var(--vscode-button-background);
         }
 
         .main-content {
@@ -264,6 +297,16 @@ export class TemplateGalleryPanel {
             padding: 20px;
             max-height: calc(100vh - 200px);
             overflow-y: auto;
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .filters-panel.collapsed {
+            width: 0;
+            padding: 0;
+            border: none;
+            overflow: hidden;
+            display: none;
         }
 
         .filter-section {
@@ -657,6 +700,10 @@ export class TemplateGalleryPanel {
                     <option value="name-asc">Title (A-Z)</option>
                     <option value="name-desc">Title (Z-A)</option>
                 </select>
+                <button class="filters-toggle-btn" onclick="toggleFilters()" id="filtersToggleBtn">
+                    <span>☰</span>
+                    <span>Filters</span>
+                </button>
             </div>
         </div>
     </div>
@@ -669,7 +716,7 @@ export class TemplateGalleryPanel {
             </div>
         </div>
 
-        <div class="filters-panel">
+        <div class="filters-panel collapsed" id="filtersPanel">
             <div class="filter-section">
                 <h3>Category</h3>
                 <select id="categoryFilter">
@@ -704,7 +751,7 @@ export class TemplateGalleryPanel {
     <div id="videoModal" class="modal">
         <div class="modal-content">
             <button class="modal-close" onclick="closeVideoModal()">&times;</button>
-            <video id="modalVideo" controls autoplay loop muted></video>
+            <video id="modalVideo" controls autoplay loop muted style="display: none;"></video>
         </div>
     </div>
 
@@ -730,6 +777,12 @@ export class TemplateGalleryPanel {
 
         let filteredTemplates = [...templates];
         let currentSort = 'date-newest';
+
+        // Toggle filters panel
+        function toggleFilters() {
+            const filtersPanel = document.getElementById('filtersPanel');
+            filtersPanel.classList.toggle('collapsed');
+        }
 
         // Initialize filters
         function initializeFilters() {
@@ -979,11 +1032,16 @@ export class TemplateGalleryPanel {
                                 View on GitHub
                             </button>
                             <button class="btn btn-secondary" onclick="starRepo('\${template.repoUrl}')">
-                                ⭐ Star
+                                ⭐ \${template.stars !== undefined ? template.stars : 'Star'}
+                            </button>
+                            <button class="btn btn-secondary" onclick="shareTemplate('\${template.name}', this)">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M13.5 1a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM11 2.5a2.5 2.5 0 11.603 1.628l-6.718 3.12a2.499 2.499 0 010 1.504l6.718 3.12a2.5 2.5 0 11-.488.876l-6.718-3.12a2.5 2.5 0 110-3.256l6.718-3.12A2.5 2.5 0 0111 2.5zm-8.5 4a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm11 5.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"></path>
+                                </svg>
                             </button>
                         </div>
                         <button class="btn btn-primary" onclick="useTemplate('\${template.name}')">
-                            Use Template
+                            Clone Template
                         </button>
                     </div>
                 </div>
@@ -1002,22 +1060,53 @@ export class TemplateGalleryPanel {
             vscode.postMessage({ command: 'starRepo', repoUrl: stargazersUrl });
         }
 
+        function shareTemplate(templateName, btn) {
+            const shareUrl = \`https://aka.ms/spec2cloud?template=\${templateName}\`;
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                // Show a temporary success message
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✓ Copied!';
+                btn.style.backgroundColor = 'var(--vscode-testing-iconPassed)';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.backgroundColor = '';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy to clipboard:', err);
+                vscode.postMessage({ command: 'showError', message: 'Failed to copy link to clipboard' });
+            });
+        }
+
         function useTemplate(templateName) {
             vscode.postMessage({ command: 'useTemplate', templateName });
         }
 
         function playVideo(videoUrl) {
-            const modal = document.getElementById('videoModal');
-            const video = document.getElementById('modalVideo');
-            video.src = videoUrl;
-            modal.classList.add('active');
+            // Check if it's a YouTube URL
+            const youtubeRegex = /(?:youtube\\.com\\/(?:[^\\/]+\\/.+\\/|(?:v|e(?:mbed)?)\\/|.*[?&]v=)|youtu\\.be\\/)([^"&?\\/\\s]{11})/;
+            const match = videoUrl.match(youtubeRegex);
+            
+            if (match && match[1]) {
+                // YouTube video - open in external browser
+                vscode.postMessage({ command: 'openExternal', url: videoUrl });
+            } else {
+                // Regular video file - play in modal
+                const modal = document.getElementById('videoModal');
+                const video = document.getElementById('modalVideo');
+                video.src = videoUrl;
+                video.style.display = 'block';
+                modal.classList.add('active');
+            }
         }
 
         function closeVideoModal() {
             const modal = document.getElementById('videoModal');
             const video = document.getElementById('modalVideo');
+            
             video.pause();
             video.src = '';
+            video.style.display = 'none';
+            
             modal.classList.remove('active');
         }
 

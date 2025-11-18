@@ -121,27 +121,9 @@ When you click "Use Template" (from tree view or gallery):
 4. Existing files are NOT overwritten
 5. Progress is shown during download
 
-## MCP Tools
-
-The extension provides an MCP tool for programmatic access:
-
-### spec2cloud-select-template
-
-**Parameters:**
-- `searchTerm` (optional): Search term
-- `category` (optional): Category filter (defaults to "All")
-- `industry` (optional): Industry filter (defaults to "All")
-
-**Behavior:**
-- Filters templates based on criteria
-- Opens the gallery with search pre-filled
-- Returns matching templates
-
-See [MCP_TOOLS.md](MCP_TOOLS.md) for detailed documentation.
-
 ## Icons and Badges
 
-The extension uses SVG icons from the `resources` folder:
+The extension uses SVG icons fr the `resources` folder:
 
 - **Services**: `resources/services/` - Azure services and tools (blue badges)
 - **Languages**: `resources/languages/` - Programming languages (orange badges)

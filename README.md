@@ -31,7 +31,7 @@ Configurable quick links to documentation and helpful resources.
 
 ### 🤖 MCP Tool Support
 
-Programmatic access for AI assistants via the `spec2cloud-select-template` tool.
+Provides tools to find templates and estimate costs on Azure.
 
 ## Getting Started
 
@@ -91,7 +91,7 @@ Add your own resource links:
 | `spec2cloud.sortTemplatesByDate` | Toggle date sorting (newest/oldest) |
 | `spec2cloud.viewTemplateOnGitHub` | Open template on GitHub |
 | `spec2cloud.viewTemplateInGallery` | View template in gallery |
-| `spec2cloud.useTemplate` | Download template to workspace |
+| `spec2cloud.cloneTemplate` | Download template to workspace |
 
 ## Template Structure
 

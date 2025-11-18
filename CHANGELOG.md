@@ -2,33 +2,61 @@
 
 All notable changes to the "spec2cloud-toolkit" extension will be documented in this file.
 
+## [0.6.0] - 2025-11-18
+
+### Added
+
+- **Azure Cost Estimator Tool**: Integrated Azure Retail Prices API for real-time pricing information
+  - Supports filtering by service name, region, currency, price type, and SKU
+  - Returns structured JSON with pricing details including retail prices, unit prices, and savings plans
+  - Uses Azure Retail Prices API version 2023-01-01-preview
+  - No authentication required (public API)
+
+### Changed
+
+- **Search Templates Tool**: Updated output format to include clickable "View Template" links in results
+  - Enhanced user experience with direct template navigation from search results
+
+## [0.5.0] - 2025-11-17
+
+### Added
+
+- **MCP Server Definition Provider**: Implemented `mcpServerDefinitionProviders` to make spec2cloud discoverable in VS Code's MCP servers list
+  - Added MCP server definition provider registration
+  - Created standalone MCP server implementation (`mcpServer.ts`)
+  - Exposes `spec2cloud_select_template` tool via MCP protocol
+  - Installed `@modelcontextprotocol/sdk` dependency for MCP support
+- **Chat Participant Integration**: Added `@spec2cloud` chat participant for GitHub Copilot Chat
+  - Use `@spec2cloud find templates for AI` in Copilot Chat
+  - Integrates with language model tools API
+  - Automatic tool invocation based on user queries
+- **Language Model Tools**: Registered `spec2cloud_select_template` as a language model tool
+  - Available to language models via `vscode.lm` API
+  - Supports searchTerm, category, and industry parameters
+  - Returns formatted markdown results with template details
+- **Tool Registration Diagnostics**: Added `spec2cloud.checkTools` command to verify MCP tool registration
+- **Enhanced Logging**: Added console logging for tool registration and invocation for debugging
+- **Gallery UI Enhancements**: 
+  - Star counts now display on star buttons (shows actual number from template metadata)
+  - Added share button that copies template URL to clipboard with visual feedback
+
+## [0.4.0] - 2025-11-14
+
+### Added
+- **Git Clone Integration**: Templates are now cloned directly into workspace using `git clone` 
+- **URI Protocol Handler**: Open templates via `vscode://` protocol with template name and action parameters
+- **Collapsible Filters Panel**: Filters can be collapsed by default with toggle button next to sort dropdown
+- **Relative Date Display**: Tree view shows relative dates (e.g., "2 days ago", "3 weeks ago") instead of absolute dates
+
 ## [0.3.0] - 2025-11-12
 
 ### Added
 
-#### Configuration
-- **Templates Repository Setting**: Configure custom GitHub repository for templates (default: `https://github.com/Azure-Samples/Spec2Cloud`)
-- **Resources Configuration**: Customizable resource links in settings
-- **Automatic Template Loading**: Templates load on extension startup with progress notification
-- **Configuration Change Detection**: Prompts to reload when templates repository changes
-
 #### Views
 - **Gallery View**: WebView with banner image and "Open Template Gallery" button
-- **Templates Tree View**: Hierarchical list of templates with sorting and actions
+- **Templates Tree View**: List of templates with sorting and actions
 - **Template Gallery Page**: Full-featured gallery with search, filters, and rich template cards
 - **Resources View**: Minimal tree view for documentation and resource links
-
-#### Template Gallery Features
-- **Real-time Search**: Search across title, description, tags, services, languages, and frameworks
-- **Smart Filtering**: Filter by category, industry, services, languages, and frameworks
-- **Flexible Sorting**: Sort by title (A-Z/Z-A) or date (newest/oldest first)
-- **Rich Template Cards**: Display thumbnails, badges, authors, version, and last update date
-- **Video Preview**: Modal playback for template demo videos
-- **Details Modal**: Full template information without truncation
-- **Icon Support**: 60+ Azure service icons, 5 language icons, 4 framework icons
-- **Badge System**: Color-coded badges for categories, industries, services, languages, frameworks, and tags
-- **Author Links**: Direct links to GitHub profiles
-- **Star Repositories**: Quick access to star templates on GitHub
 
 #### Template Actions
 - **View on GitHub**: Opens template repository in external browser
@@ -83,7 +111,7 @@ All notable changes to the "spec2cloud-toolkit" extension will be documented in 
 - `spec2cloud.sortTemplatesByDate` - Toggle date sorting
 - `spec2cloud.viewTemplateOnGitHub` - Open template on GitHub
 - `spec2cloud.viewTemplateInGallery` - View template in gallery
-- `spec2cloud.useTemplate` - Download template to workspace
+- `spec2cloud.cloneTemplate` - Download template to workspace
 - `spec2cloud.openResource` - Open resource URL
 - `spec2cloud.mcp.selectTemplate` - MCP tool command
 

@@ -2,22 +2,20 @@
   "name": "spec2cloud-toolkit",
   "displayName": "Spec2Cloud on Azure",
   "description": "Spec-Driven Development with GitHub Copilot and Azure",
-  "version": "0.3.0",
-  "publisher": "AlexVieiraGBB",
+  "version": "0.6.0",
+  "publisher": "ms-gbb-tools",
+	"license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/EmeaAppGbb/spec2cloud-toolkit.git"
   },
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.105.0"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onView:spec2cloud.gallery"
-  ],
-  "icon": "resources/Spec2Cloud-white.png",
+  "icon": "resources/Spec2Cloud-blue.png",
   "main": "./out/extension.js",
   "contributes": {
     "configuration": {
@@ -53,15 +51,18 @@
         {
           "type": "webview",
           "id": "spec2cloud.gallery",
-          "name": "Gallery"
+          "name": "Gallery",
+          "icon": "$(gallery)"
         },
         {
           "id": "spec2cloud.templates",
-          "name": "Templates"
+          "name": "Templates",
+          "icon": "$(files)"
         },
         {
           "id": "spec2cloud.resources",
-          "name": "Resources"
+          "name": "Resources",
+          "icon": "$(book)"
         }
       ]
     },
@@ -74,6 +75,92 @@
         }
       ]
     },
+    "languageModelTools": [
+      {
+        "name": "spec2cloud_search_templates",
+        "displayName": "Search Spec2Cloud Templates",
+        "modelDescription": "Search and filter Spec2Cloud templates. Use this when users want to find Azure templates, starter kits, or reference architectures. Parameters: searchTerm",
+        "icon": "$(search)",
+        "tags": ["azure", "templates", "spec2cloud", "starter", "architecture"],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "searchTerm": {
+              "type": "string",
+              "description": "Search term to filter templates by title, description, tags, services, languages, or frameworks"
+            }
+          }
+        }
+      },
+      {
+          "name": "searchTemplates",
+          "tags": ["azure", "templates", "spec2cloud", "starter", "architecture"],
+          "toolReferenceName": "searchTemplates",
+          "displayName": "Search Spec2Cloud Templates",
+          "modelDescription": "Retrieve Spec2Cloud templates based on search criteria.",
+          "userDescription": "Retrieve the list of Spec2Cloud templates based on search criteria.",
+          "canBeReferencedInPrompt": true,
+          "icon": "$(files)",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "searchTerm": {
+                "type": "string",
+                "description": "Search term to filter templates by title, description, tags, services, languages, or frameworks"
+              }
+            }
+          }
+      },
+      {
+          "name": "costEstimator",
+          "tags": ["azure", "templates", "spec2cloud", "starter", "architecture"],
+          "toolReferenceName": "costEstimator",
+          "displayName": "Cost Estimator",
+          "modelDescription": "Estimate the Azure cost for the Spec architecture.",
+          "userDescription": "Estimate the cost of Azure resources for the Spec architecture.",
+          "canBeReferencedInPrompt": true,
+          "icon": "$(files)",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "serviceName": {
+                "type": "string",
+                "description": "Name of the Azure service to estimate cost for"
+              },
+              "currencyCode": {
+                "type": "string",
+                "description": "Currency code to use for cost estimation"
+              },
+              "priceType": {
+                "type": "string",
+                "description": "Price type to use for cost estimation (e.g. Consumption)"
+              },
+              "armRegionName": {
+                "type": "string",
+                "description": "ARM region name to use for cost estimation (e.g. eastus)"
+              },
+              "sku": {
+                "type": "string",
+                "description": "ARM SKU name to use for cost estimation (e.g. Standard_D2s_v3)"
+              }
+            }
+          }
+      }      
+    ],
+    "chatParticipants": [
+      {
+        "id": "spec2cloud.chat",
+        "name": "spec2cloud",
+        "description": "Find and explore Azure Spec2Cloud templates",
+        "isSticky": true,
+        "commands": [
+          {
+            "name": "find",
+            "description": "Find templates based on criteria"
+          }
+        ]
+      }
+    ],
     "commands": [
       {
         "command": "spec2cloud.openGallery",
@@ -85,6 +172,12 @@
         "title": "Refresh Templates",
         "category": "Spec2Cloud",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "spec2cloud.searchTemplates",
+        "title": "Search Templates",
+        "category": "Spec2Cloud",
+        "icon": "$(search)"
       },
       {
         "command": "spec2cloud.sortTemplatesByName",
@@ -111,14 +204,19 @@
         "icon": "$(eye)"
       },
       {
-        "command": "spec2cloud.useTemplate",
-        "title": "Use Template",
+        "command": "spec2cloud.cloneTemplate",
+        "title": "Clone Template",
         "category": "Spec2Cloud",
         "icon": "$(cloud-download)"
       },
       {
         "command": "spec2cloud.openResource",
         "title": "Open Resource",
+        "category": "Spec2Cloud"
+      },
+      {
+        "command": "spec2cloud.checkTools",
+        "title": "Check MCP Tools Registration",
         "category": "Spec2Cloud"
       }
     ],
@@ -130,14 +228,19 @@
           "group": "navigation@1"
         },
         {
-          "command": "spec2cloud.sortTemplatesByName",
+          "command": "spec2cloud.searchTemplates",
           "when": "view == spec2cloud.templates",
           "group": "navigation@2"
         },
         {
-          "command": "spec2cloud.sortTemplatesByDate",
+          "command": "spec2cloud.sortTemplatesByName",
           "when": "view == spec2cloud.templates",
           "group": "navigation@3"
+        },
+        {
+          "command": "spec2cloud.sortTemplatesByDate",
+          "when": "view == spec2cloud.templates",
+          "group": "navigation@4"
         }
       ],
       "view/item/context": [
@@ -152,7 +255,7 @@
           "group": "inline@2"
         },
         {
-          "command": "spec2cloud.useTemplate",
+          "command": "spec2cloud.cloneTemplate",
           "when": "view == spec2cloud.templates && viewItem == template",
           "group": "inline@3"
         },
@@ -167,7 +270,7 @@
           "group": "1_actions@2"
         },
         {
-          "command": "spec2cloud.useTemplate",
+          "command": "spec2cloud.cloneTemplate",
           "when": "view == spec2cloud.templates && viewItem == template",
           "group": "1_actions@3"
         }
@@ -192,6 +295,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "axios": "^1.6.0"
+    "axios": "^1.6.0",
+    "@modelcontextprotocol/sdk": "^1.0.0"
   }
 }

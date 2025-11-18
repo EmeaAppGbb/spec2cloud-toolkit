@@ -14,6 +14,8 @@ export interface Template {
     version: string;
     lastCommitDate: string;
     repoUrl: string;
+    hasOwnRepo?: boolean;
+    stars?: number;
 }
 
 export interface Author {
