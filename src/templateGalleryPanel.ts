@@ -387,6 +387,8 @@ export class TemplateGalleryPanel {
             border-radius: 8px;
             overflow: hidden;
             transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
         }
 
         .template-card:hover {
@@ -437,6 +439,9 @@ export class TemplateGalleryPanel {
 
         .card-content {
             padding: 16px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
         }
 
         .card-title {
@@ -563,6 +568,7 @@ export class TemplateGalleryPanel {
             justify-content: space-between;
             align-items: center;
             padding-top: 12px;
+            margin-top: auto;
             border-top: 1px solid var(--vscode-panel-border);
         }
 
@@ -773,7 +779,7 @@ export class TemplateGalleryPanel {
             ${frameworkIcons.map(icon => `'${icon}': '${getResourceUri('frameworks', icon + '.svg')}'`).join(',\n            ')}
         };
 
-        const githubIcon = '${getResourceUri('services', 'github.svg')}';
+        const githubIcon = '${getResourceUri('services', 'github-blue.svg')}';
 
         let filteredTemplates = [...templates];
         let currentSort = 'date-newest';
@@ -1040,8 +1046,8 @@ export class TemplateGalleryPanel {
                                 </svg>
                             </button>
                         </div>
-                        <button class="btn btn-primary" onclick="useTemplate('\${template.name}')">
-                            Clone Template
+                        <button class="btn btn-primary" onclick="useTemplate('\${template.name}')" title="Clone Template">
+                            Clone
                         </button>
                     </div>
                 </div>

@@ -2,7 +2,7 @@
   "name": "spec2cloud-toolkit",
   "displayName": "Spec2Cloud on Azure",
   "description": "Spec-Driven Development with GitHub Copilot and Azure",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "publisher": "ms-gbb-tools",
 	"license": "MIT",
   "repository": {
@@ -30,16 +30,28 @@
           "type": "array",
           "default": [
             {
-              "name": "Spec2Cloud Documentation",
-              "description": "Official documentation for Spec2Cloud",
-              "url": "https://github.com/Azure-Samples/Spec2Cloud",
-              "icon": "github"
+              "name": "Spec2Cloud on the web (aka.ms/spec2cloud)",
+              "description": "Search and discover templates on the web",
+              "url": "https://aka.ms/spec2cloud",
+              "icon": "edge"
+            },
+            {
+              "name": "Quick Start Guide",
+              "description": "Docs on how to use Spec2Cloud",
+              "url": "https://github.com/Azure-Samples/Spec2Cloud/blob/main/README.md",
+              "icon": "github-blue"
+            },
+            {
+              "name": "GitHub Copilot",
+              "description": "From Specs to Code to Cloud",
+              "url": "https://github.com/features/copilot",
+              "icon": "copilot"
             },
             {
               "name": "Azure Documentation",
-              "description": "Microsoft Azure official documentation",
+              "description": "Learn more about Azure services and solutions",
               "url": "https://learn.microsoft.com/azure",
-              "icon": "Azure"
+              "icon": "azure"
             }
           ],
           "description": "List of resource links to display"
