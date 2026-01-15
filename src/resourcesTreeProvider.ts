@@ -51,7 +51,7 @@ class ResourceTreeItem extends vscode.TreeItem {
         this.contextValue = 'resource';
 
         // Set icon from resources/services folder
-        const iconFileName = resource.icon.toLowerCase().replace(/\s+/g, '-');
+        const iconFileName = resource.icon.toLowerCase().replace(/\s+/g, '');
         this.iconPath = vscode.Uri.joinPath(this.extensionUri, 'resources', 'services', `${iconFileName}.svg`);
 
         // Make it clickable

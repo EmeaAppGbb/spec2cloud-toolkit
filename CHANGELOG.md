@@ -2,6 +2,27 @@
 
 All notable changes to the "spec2cloud-toolkit" extension will be documented in this file.
 
+## [0.6.2] - 2026-01-14
+
+### Changed
+
+- **VS Code Engine**: Updated minimum VS Code version requirement to 1.105.0
+- **Tool Registration**: Improved tool registration with cleaner class-based architecture
+  - Refactored `SearchTemplatesTool` as a standalone class in `src/tools/searchTemplates.ts`
+  - Refactored `CostEstimatorTool` as a standalone class in `src/tools/costEstimator.ts`
+- **Code Organization**: Moved MCP tools to dedicated `src/tools/` directory for better maintainability
+
+### Fixed
+
+- Minor bug fixes and stability improvements
+
+## [0.6.1] - 2025-12-01
+
+### Changed
+
+- Internal code refactoring and cleanup
+- Improved error handling in tool invocations
+
 ## [0.6.0] - 2025-11-18
 
 ### Added
@@ -111,7 +132,7 @@ All notable changes to the "spec2cloud-toolkit" extension will be documented in 
 - `spec2cloud.sortTemplatesByDate` - Toggle date sorting
 - `spec2cloud.viewTemplateOnGitHub` - Open template on GitHub
 - `spec2cloud.viewTemplateInGallery` - View template in gallery
-- `spec2cloud.cloneTemplate` - Download template to workspace
+- `spec2cloud.initializeTemplate` - Initialize template to workspace
 - `spec2cloud.openResource` - Open resource URL
 - `spec2cloud.mcp.selectTemplate` - MCP tool command
 

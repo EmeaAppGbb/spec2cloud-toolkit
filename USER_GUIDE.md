@@ -54,7 +54,7 @@ The Templates view shows a hierarchical list of all available templates.
 **Template Actions:**
 - **View on GitHub**: Opens the template repository in your browser
 - **View Template**: Opens the gallery with the template pre-selected in search
-- **Use Template**: Downloads all template files to your workspace
+- **Use Template**: Initialize all template files to your workspace
 
 ### 3. Template Gallery Page
 
@@ -96,7 +96,7 @@ Each template card displays:
 **Card Actions:**
 - **View on GitHub**: Opens the template repository
 - **Star**: Opens GitHub to star the repository
-- **Use Template**: Downloads the template to your workspace
+- **Use Template**: Initialize the template to your workspace
 
 **Modals:**
 - **Video Modal**: Click play button to watch template demo video
@@ -115,7 +115,7 @@ The Resources view displays configured links to documentation and helpful resour
 
 When you click "Use Template" (from tree view or gallery):
 
-1. A confirmation dialog appears: "This will download all the template files to this current workspace. Continue?"
+1. A confirmation dialog appears: "This will initialize all the template files to this current workspace. Continue?"
 2. Choose "Yes" to proceed or "No" to cancel
 3. If "Yes", all template files and subfolders are downloaded
 4. Existing files are NOT overwritten

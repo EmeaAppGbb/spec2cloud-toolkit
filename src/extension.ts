@@ -101,7 +101,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     if (template) {
                         if (action === 'use') {
                             // Use the template
-                            vscode.commands.executeCommand('spec2cloud.cloneTemplate', { template });
+                            vscode.commands.executeCommand('spec2cloud.initializeTemplate', { template });
                         } else if (action === 'github') {
                             // Open on GitHub
                             vscode.env.openExternal(vscode.Uri.parse(template.repoUrl));
@@ -199,14 +199,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Use Template Command
     context.subscriptions.push(
-        vscode.commands.registerCommand('spec2cloud.cloneTemplate', async (treeItem) => {
+        vscode.commands.registerCommand('spec2cloud.initializeTemplate', async (treeItem) => {
             if (!treeItem || !treeItem.template) {
                 return;
             }
 
             const template = treeItem.template;
             const answer = await vscode.window.showInformationMessage(
-                `This action will clone the template into the current workspace. Continue?`,
+                `This action will initialize the template into the current workspace. Continue?`,
                 { modal: true },
                 'Yes'
             );
@@ -220,10 +220,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
                 await vscode.window.withProgress({
                     location: vscode.ProgressLocation.Notification,
-                    title: `Downloading template: ${template.title}`,
+                    title: `Initializing template: ${template.title}`,
                     cancellable: false
                 }, async () => {
-                    await templateService.downloadTemplate(template, workspaceFolders[0].uri);
+                    await templateService.initializeTemplate(template, workspaceFolders[0].uri);
                 });
             }
         })

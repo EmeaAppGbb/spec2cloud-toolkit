@@ -91,7 +91,7 @@ Add your own resource links:
 | `spec2cloud.sortTemplatesByDate` | Toggle date sorting (newest/oldest) |
 | `spec2cloud.viewTemplateOnGitHub` | Open template on GitHub |
 | `spec2cloud.viewTemplateInGallery` | View template in gallery |
-| `spec2cloud.cloneTemplate` | Download template to workspace |
+| `spec2cloud.initializeTemplate` | Initialize template to workspace |
 
 ## Template Structure
 
@@ -149,7 +149,7 @@ Icons are located in:
 
 ## Requirements
 
-- VS Code 1.85.0 or later
+- VS Code 1.105.0 or later
 - Internet connection to fetch templates
 
 ## Extension Settings
@@ -178,21 +178,15 @@ See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for solutions to common issues.
 
 ## Release Notes
 
-### 0.3.0
+### 0.6.2
 
-**Added:**
-- Gallery view with banner image and open button
-- Templates tree view with sorting and actions
-- Full-featured template gallery page with search and filters
-- Resources tree view for documentation links
-- MCP tool: `spec2cloud-select-template`
-- Support for 60+ Azure service icons
-- Template download functionality with overwrite protection
-- Video preview support
-- Author links to GitHub profiles
-- Real-time filtering and search
+See [CHANGELOG.md](CHANGELOG.md) for full release notes.
 
-**Features:**
+**Latest Features:**
+- 🤖 **GitHub Copilot Integration**: `@spec2cloud` chat participant and language model tools
+- 💰 **Azure Cost Estimator**: Real-time pricing from Azure Retail Prices API
+- 🔗 **URI Protocol Handler**: Open templates via `vscode://` protocol
+- 📋 **Git Clone Integration**: Templates cloned directly using `git clone`
 - 🎨 Modern UI with theme support (light/dark)
 - 🔍 Powerful search across all template properties
 - 🏷️ Multiple filter dimensions (category, industry, technology)
@@ -200,7 +194,6 @@ See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for solutions to common issues.
 - 🎬 Video previews for templates
 - 📱 Responsive gallery layout
 - 🔒 Safe template downloads (no overwrites)
-- 🤖 AI assistant integration via MCP
 
 ## License
 

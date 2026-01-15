@@ -130,9 +130,9 @@ export class TemplateService {
         throw new Error('Invalid GitHub repository URL');
     }
 
-    async downloadTemplate(template: Template, targetDir: vscode.Uri): Promise<void> {
+    async initializeTemplate(template: Template, targetDir: vscode.Uri): Promise<void> {
         try {
-            this.log(`Starting git clone for template: ${template.name}`);
+            this.log(`Starting azd init for template: ${template.name}`);
             this.log(`Repository URL: ${template.repoUrl}`);
             this.log(`Target directory: ${targetDir.fsPath}`);
 
@@ -144,18 +144,18 @@ export class TemplateService {
 
             const { owner, repo, branch, basePath } = repoInfo;
             
-            // Build the git clone URL
-            const cloneUrl = `https://github.com/${owner}/${repo}.git`;
+            // Build the azd init URL
+            const initUrl = `https://github.com/${owner}/${repo}.git`;
             
-            // Clone directly into the root directory
-            const cloneTargetPath = targetDir;
+            // Initialize directly into the root directory
+            const initTargetPath = targetDir;
 
             // Check if directory is not empty
             try {
-                const entries = await vscode.workspace.fs.readDirectory(cloneTargetPath);
+                const entries = await vscode.workspace.fs.readDirectory(initTargetPath);
                 if (entries.length > 0) {
                     const overwrite = await vscode.window.showWarningMessage(
-                        `Target directory is not empty. Clone template files into this directory anyway?`,
+                        `Target directory is not empty. Initialize template files into this directory anyway?`,
                         { modal: true },
                         'Yes',
                         'No'
@@ -168,40 +168,33 @@ export class TemplateService {
                 // Directory doesn't exist or can't read, which is fine
             }
 
-            // Execute git clone
+            // Execute azd init command in terminal
             const terminal = vscode.window.createTerminal({
-                name: `Clone ${template.name}`,
+                name: `Init ${template.name}`,
                 cwd: targetDir.fsPath,
                 hideFromUser: false
             });
 
             terminal.show();
 
-            // Build git clone command
-            let cloneCommand: string;
+            // Build azd init command
+            let initCommand: string;
             if (template.hasOwnRepo && !basePath) {
-                // Clone the entire repository into current directory
-                this.log(`Cloning entire repository into root`);
-                cloneCommand = `git clone --branch ${branch} ${cloneUrl} .`;
-            } else {
-                // Clone with sparse checkout for specific folder into current directory
-                const sparsePath = basePath || `templates/${template.name}`;
-                this.log(`Cloning with sparse checkout into root: ${sparsePath}`);
-                
-                cloneCommand = `git clone --filter=blob:none --no-checkout --branch ${branch} ${cloneUrl} . && git sparse-checkout init --cone && git sparse-checkout set "${sparsePath}" && git checkout ${branch}`;
-            }
+                // Initialize the entire repository into current directory
+                this.log(`Initializing template into current workspace directory`);
+                initCommand = `azd init --template ${initUrl} --branch ${branch} --environment ${template.name}`;
+                terminal.sendText(initCommand);
+                vscode.window.showInformationMessage(`Initializing template "${template.title}"... Check terminal for progress.`);
+            } 
 
-            terminal.sendText(cloneCommand);
-
-            vscode.window.showInformationMessage(`Cloning template "${template.title}"... Check terminal for progress.`);
         } catch (error: any) {
-            this.log(`ERROR: Failed to clone template: ${error.message}`);
-            vscode.window.showErrorMessage(`Failed to clone template: ${error.message}`);
+            this.log(`ERROR: Failed to init template: ${error.message}`);
+            vscode.window.showErrorMessage(`Failed to init template: ${error.message}`);
             throw error;
         }
     }
 
-    private async getTemplateFiles(template: Template): Promise<{ path: string; downloadUrl: string }[]> {
+    private async getTemplateFiles(template: Template): Promise<{ path: string; templateUrl: string }[]> {
         const repoInfo = this.extractRepoInfo(template);
         if (!repoInfo) {
             throw new Error('Invalid GitHub repository URL in template');
@@ -212,7 +205,7 @@ export class TemplateService {
         // If template has its own repo, use basePath or root; otherwise use templates/{name}
         let templatePath: string;
         if (template.hasOwnRepo) {
-            // Template has its own repository - download from basePath or root
+            // Template has its own repository - initialize from basePath or root
             templatePath = basePath || '';
         } else {
             // Template is part of a collection - use templates/{name} path
@@ -265,7 +258,7 @@ export class TemplateService {
                     
                     return {
                         path: relativePath,
-                        downloadUrl: `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${item.path}`
+                        templateUrl: `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${item.path}`
                     };
                 });
 
@@ -293,15 +286,58 @@ export class TemplateService {
         const [, owner, repo] = match;
         
         // Extract branch and base path from URL
-        const urlParts = template.repoUrl.split('/');
-        const treeIndex = urlParts.indexOf('tree');
+        // URL format: https://github.com/owner/repo/tree/branch-name/optional/path
+        // Branch names can contain '/' characters (e.g., feature/my-branch)
+        const treeMatch = template.repoUrl.match(/\/tree\/(.+)$/);
         let branch = 'main';
         let basePath = '';
         
-        if (treeIndex > -1 && urlParts.length > treeIndex + 1) {
-            branch = urlParts[treeIndex + 1];
-            // Get everything after branch as the base path
-            basePath = urlParts.slice(treeIndex + 2).join('/');
+        if (treeMatch) {
+            const afterTree = treeMatch[1];
+            // Try to find the branch/path split by looking for common path patterns
+            // Strategy: The branch is everything up to and including a known branch pattern,
+            // or we use a heuristic to split at likely path boundaries
+            
+            // Common branch names that might contain slashes
+            const commonBranchPrefixes = ['feature/', 'bugfix/', 'hotfix/', 'release/', 'refs/heads/', 'refs/tags/'];
+            
+            let foundSplit = false;
+            
+            // First, check if the path starts with a common branch prefix
+            for (const prefix of commonBranchPrefixes) {
+                if (afterTree.startsWith(prefix)) {
+                    // Find the next segment after the prefix as part of the branch name
+                    const restAfterPrefix = afterTree.substring(prefix.length);
+                    const nextSlashIndex = restAfterPrefix.indexOf('/');
+                    if (nextSlashIndex > -1) {
+                        branch = prefix + restAfterPrefix.substring(0, nextSlashIndex);
+                        basePath = restAfterPrefix.substring(nextSlashIndex + 1);
+                    } else {
+                        branch = afterTree;
+                        basePath = '';
+                    }
+                    foundSplit = true;
+                    break;
+                }
+            }
+            
+            if (!foundSplit) {
+                // For simple branch names (main, master, develop, or single-segment names),
+                // the first segment is the branch
+                const segments = afterTree.split('/');
+                
+                // Check if first segment looks like a common simple branch name
+                const simpleBranches = ['main', 'master', 'develop', 'dev', 'staging', 'production', 'prod'];
+                if (simpleBranches.includes(segments[0]) || segments.length === 1) {
+                    branch = segments[0];
+                    basePath = segments.slice(1).join('/');
+                } else {
+                    // Heuristic: if we can't determine the branch, assume it's just the first segment
+                    // This is the fallback for unknown branch naming conventions
+                    branch = segments[0];
+                    basePath = segments.slice(1).join('/');
+                }
+            }
         }
         
         return { owner, repo, branch, basePath };

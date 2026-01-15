@@ -2,7 +2,7 @@
   "name": "spec2cloud-toolkit",
   "displayName": "Spec2Cloud on Azure",
   "description": "Spec-Driven Development with GitHub Copilot and Azure",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "publisher": "ms-gbb-tools",
 	"license": "MIT",
   "repository": {
@@ -39,7 +39,7 @@
               "name": "Quick Start Guide",
               "description": "Docs on how to use Spec2Cloud",
               "url": "https://github.com/Azure-Samples/Spec2Cloud/blob/main/README.md",
-              "icon": "github-blue"
+              "icon": "githubblue"
             },
             {
               "name": "GitHub Copilot",
@@ -216,8 +216,8 @@
         "icon": "$(eye)"
       },
       {
-        "command": "spec2cloud.cloneTemplate",
-        "title": "Clone Template",
+        "command": "spec2cloud.initializeTemplate",
+        "title": "Initialize Template",
         "category": "Spec2Cloud",
         "icon": "$(cloud-download)"
       },
@@ -267,7 +267,7 @@
           "group": "inline@2"
         },
         {
-          "command": "spec2cloud.cloneTemplate",
+          "command": "spec2cloud.initializeTemplate",
           "when": "view == spec2cloud.templates && viewItem == template",
           "group": "inline@3"
         },
@@ -282,7 +282,7 @@
           "group": "1_actions@2"
         },
         {
-          "command": "spec2cloud.cloneTemplate",
+          "command": "spec2cloud.initializeTemplate",
           "when": "view == spec2cloud.templates && viewItem == template",
           "group": "1_actions@3"
         }

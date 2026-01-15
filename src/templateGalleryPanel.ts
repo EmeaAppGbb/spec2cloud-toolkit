@@ -87,7 +87,7 @@ export class TemplateGalleryPanel {
         }
 
         const answer = await vscode.window.showInformationMessage(
-            `This action will clone the template into the current workspace. Continue?`,
+            `This action will initialize the template into the current workspace. Continue?`,
             { modal: true },
             'Yes'
         );
@@ -104,7 +104,7 @@ export class TemplateGalleryPanel {
                 title: `Cloning template: ${template.title}`,
                 cancellable: false
             }, async () => {
-                await this.templateService.downloadTemplate(template, workspaceFolders[0].uri);
+                await this.templateService.initializeTemplate(template, workspaceFolders[0].uri);
             });
         }
     }
@@ -156,29 +156,29 @@ export class TemplateGalleryPanel {
 
         // Get all service icons
         const serviceIcons = [
-            'azure-ai-bot-service', 'azure-ai-content-safety', 'azure-ai-document-intelligence',
-            'azure-ai-face-service', 'azure-ai-foundry', 'azure-ai-language', 'azure-ai-search',
-            'azure-ai-speech', 'azure-ai-translator', 'azure-ai-vision', 'azure-api-center',
-            'azure-api-management', 'azure-app-configuration', 'azure-app-service',
-            'azure-application-gateway', 'azure-communication-services', 'azure-container-apps',
-            'azure-container-registry', 'azure-container-storage', 'azure-cosmos-db',
-            'azure-data-factory', 'azure-data-lake-storage', 'azure-database-for-mysql',
-            'azure-database-for-postgresql', 'azure-databricks', 'azure-deployment-environments',
-            'azure-event-grid', 'azure-event-hubs', 'azure-frontdoor', 'azure-functions',
-            'azure-key-vault', 'azure-kubernetes-service', 'azure-logic-apps',
-            'azure-machine-learning', 'azure-managed-grafana', 'azure-managed-redis',
-            'azure-migrate', 'azure-monitor', 'azure-notification-hubs', 'azure-openai',
-            'azure-policy', 'azure-private-link', 'azure-red-hat-openshift', 'azure-service-bus',
-            'azure-signalr-service', 'azure-sql-database', 'azure-sre-agent', 'azure-storage',
-            'azure-stream-analytics', 'azure-traffic-manager', 'azure-virtual-machines',
-            'azure-virtual-network', 'azure-web-pubsub', 'Azure', 'github',
-            'microsoft-copilot', 'microsoft-dragon-copilot', 'microsoft-entra-id',
-            'microsoft-fabric', 'microsoft-playwright-testing', 'microsoft-power-bi-embedded',
-            'microsoft-purview', 'vs-code'
+            'azureaibotservice', 'azureaicontentsafety', 'azureaidocumentintelligence',
+            'azureaifaceservice', 'azureaifoundry', 'azureailanguage', 'azureaisearch',
+            'azureaispeech', 'azureaitranslator', 'azureaivision', 'azureapicenter',
+            'azureapimanagement', 'azureappconfiguration', 'azureappservice',
+            'azureapplicationgateway', 'azurecommunicationservices', 'azurecontainerapps',
+            'azurecontainerregistry', 'azurecontainerstorage', 'azurecosmosdb',
+            'azuredatafactory', 'azuredatalakestorage', 'azuredatabaseformysql',
+            'azuredatabaseforpostgresql', 'azuredatabricks', 'azuredeploymentenvironments',
+            'azureeventgrid', 'azureeventhubs', 'azurefrontdoor', 'azurefunctions',
+            'azurekeyvault', 'azurekubernetesservice', 'azurelogicapps',
+            'azuremachinelearning', 'azuremanagedgrafana', 'azuremanagedredis',
+            'azuremigrate', 'azuremonitor', 'azurenotificationhubs', 'azureopenai', 'azureopenaiservice',
+            'azurepolicy', 'azureprivatelink', 'azureredhatopenshift', 'azureservicebus',
+            'azuresignalrservice', 'azuresqldatabase', 'azuresreagent', 'azurestorage',
+            'azurestreamanalytics', 'azuretrafficmanager', 'azurevirtualmachines',
+            'azurevirtualnetwork', 'azurewebpubsub', 'Azure', 'github',
+            'microsoftcopilot', 'microsoftdragoncopilot', 'microsoftentraid',
+            'microsoftfabric', 'microsoftplaywrighttesting', 'microsoftpowerbiembedded',
+            'microsoftpurview', 'microsoftfoundry', 'vscode'
         ];
 
         const languageIcons = ['dotnet', 'go', 'java', 'python', 'typescript'];
-        const frameworkIcons = ['aspire', 'langchain', 'microsoft-agent-framework', 'pydantic-ai'];
+        const frameworkIcons = ['aspire', 'langchain', 'langgraph', 'microsoftagentframework', 'pydanticai'];
 
         return `<!DOCTYPE html>
 <html lang="en">
@@ -779,7 +779,7 @@ export class TemplateGalleryPanel {
             ${frameworkIcons.map(icon => `'${icon}': '${getResourceUri('frameworks', icon + '.svg')}'`).join(',\n            ')}
         };
 
-        const githubIcon = '${getResourceUri('services', 'github-blue.svg')}';
+        const githubIcon = '${getResourceUri('services', 'githubblue.svg')}';
 
         let filteredTemplates = [...templates];
         let currentSort = 'date-newest';
@@ -818,7 +818,7 @@ export class TemplateGalleryPanel {
             services.forEach(service => {
                 const div = document.createElement('div');
                 div.className = 'checkbox-item';
-                const normalizedService = service.toLowerCase().replace(/\\s+/g, '-');
+                const normalizedService = service.toLowerCase().replace(/\\s+/g, '');
                 div.innerHTML = \`
                     <input type="checkbox" id="service-\${service}" value="\${service}">
                     <label for="service-\${service}">
@@ -834,7 +834,7 @@ export class TemplateGalleryPanel {
                 const div = document.createElement('div');
                 div.className = 'checkbox-item';
                 // Special case for .NET to map to dotnet icon
-                let normalizedLang = lang.toLowerCase().replace(/\\s+/g, '-');
+                let normalizedLang = lang.toLowerCase().replace(/\\s+/g, '');
                 if (normalizedLang === '.net') {
                     normalizedLang = 'dotnet';
                 }
@@ -852,7 +852,7 @@ export class TemplateGalleryPanel {
             frameworks.forEach(fw => {
                 const div = document.createElement('div');
                 div.className = 'checkbox-item';
-                const normalizedFw = fw.toLowerCase().replace(/\\s+/g, '-');
+                const normalizedFw = fw.toLowerCase().replace(/\\s+/g, '');
                 div.innerHTML = \`
                     <input type="checkbox" id="fw-\${fw}" value="\${fw}">
                     <label for="fw-\${fw}">
@@ -960,14 +960,14 @@ export class TemplateGalleryPanel {
             \` : '';
 
             const servicesBadges = template.services.map(service => {
-                const normalized = service.toLowerCase().replace(/\\s+/g, '-');
+                const normalized = service.toLowerCase().replace(/\\s+/g, '');
                 const icon = iconMap[normalized] ? \`<img src="\${iconMap[normalized]}" class="icon-small">\` : '';
                 return \`<span class="badge-service">\${icon}\${service}</span>\`;
             }).join('');
 
             const languagesBadges = template.languages.map(lang => {
                 // Special case for .NET to map to dotnet icon
-                let normalized = lang.toLowerCase().replace(/\\s+/g, '-');
+                let normalized = lang.toLowerCase().replace(/\\s+/g, '');
                 if (normalized === '.net') {
                     normalized = 'dotnet';
                 }
@@ -976,7 +976,7 @@ export class TemplateGalleryPanel {
             }).join('');
 
             const frameworksBadges = template.frameworks.map(fw => {
-                const normalized = fw.toLowerCase().replace(/\\s+/g, '-');
+                const normalized = fw.toLowerCase().replace(/\\s+/g, '');
                 const icon = iconMap[normalized] ? \`<img src="\${iconMap[normalized]}" class="icon-small">\` : '';
                 return \`<span class="badge-framework">\${icon}\${fw}</span>\`;
             }).join('');
@@ -1046,8 +1046,8 @@ export class TemplateGalleryPanel {
                                 </svg>
                             </button>
                         </div>
-                        <button class="btn btn-primary" onclick="useTemplate('\${template.name}')" title="Clone Template">
-                            Clone
+                        <button class="btn btn-primary" onclick="useTemplate('\${template.name}')" title="Initialize Template">
+                            Initialize
                         </button>
                     </div>
                 </div>
